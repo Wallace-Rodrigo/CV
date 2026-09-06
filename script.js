@@ -1,7 +1,7 @@
 const CONTACT = {
-  email: "seu.email@exemplo.com",
-  phone: "+55 (61) 99999-9999",
-  phoneHref: "+5561999999999",
+  email: "wallacerodrigo57@gmail.com",
+  phone: "+55 (61) 99199-8105",
+  phoneHref: "+5561991998105",
 };
 
 function applyContact() {
