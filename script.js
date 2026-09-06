@@ -1,14 +1,8 @@
-/**
- * Currículo — Wallace Rodrigo
- * Ajuste aqui seus dados de contato reais.
- */
 const CONTACT = {
   email: "seu.email@exemplo.com",
   phone: "+55 (61) 99999-9999",
   phoneHref: "+5561999999999",
 };
-
-const THEME_KEY = "cv-theme";
 
 function applyContact() {
   const email = document.getElementById("email-link");
@@ -25,60 +19,97 @@ function applyContact() {
   }
 }
 
-function getPreferredTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function setTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem(THEME_KEY, theme);
-  const btn = document.getElementById("btn-theme");
-  if (btn) {
-    btn.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
-    btn.textContent = theme === "dark" ? "Tema claro" : "Tema escuro";
-  }
-}
-
-function initTheme() {
-  setTheme(getPreferredTheme());
-  document.getElementById("btn-theme")?.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme");
-    setTheme(current === "dark" ? "light" : "dark");
-  });
-}
-
 function initPrint() {
-  document.getElementById("btn-print")?.addEventListener("click", () => {
-    window.print();
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "p") {
-      // Deixa o navegador abrir o diálogo nativo; útil para PDF.
-      return;
-    }
-  });
+  const print = () => window.print();
+  document.getElementById("btn-print")?.addEventListener("click", print);
+  document.getElementById("btn-print-footer")?.addEventListener("click", print);
 }
 
-function animateSkills() {
+function initNavScroll() {
+  const nav = document.querySelector(".nav");
+  if (!nav) return;
+
+  const onScroll = () => {
+    nav.classList.toggle("is-scrolled", window.scrollY > 12);
+  };
+
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+}
+
+function initReveals() {
+  const nodes = document.querySelectorAll(".reveal");
+  if (!nodes.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    nodes.forEach((node) => node.classList.add("is-visible"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      });
+    },
+    { threshold: 0.14, rootMargin: "0px 0px -8% 0px" }
+  );
+
+  nodes.forEach((node) => observer.observe(node));
+}
+
+function initSkills() {
   const skills = document.querySelectorAll("#skills-list li");
-  skills.forEach((skill, index) => {
-    skill.style.animationDelay = `${index * 40}ms`;
-    skill.classList.add("is-visible");
-  });
+  if (!skills.length) return;
+
+  const play = () => {
+    skills.forEach((skill, index) => {
+      skill.style.animationDelay = `${index * 35}ms`;
+      skill.classList.add("is-on");
+    });
+  };
+
+  const section = document.getElementById("formacao");
+  if (!section || !("IntersectionObserver" in window)) {
+    play();
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      play();
+      observer.disconnect();
+    },
+    { threshold: 0.2 }
+  );
+
+  observer.observe(section);
 }
 
-function yearStamp() {
-  // Garante datas relativas coerentes se precisar expandir no futuro.
-  document.documentElement.dataset.generated = new Date().toISOString().slice(0, 10);
+function initSmoothAnchors() {
+  document.querySelectorAll('a[href^="#"]').forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const id = link.getAttribute("href");
+      if (!id || id === "#") return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  const year = document.getElementById("year");
+  if (year) year.textContent = String(new Date().getFullYear());
+
   applyContact();
-  initTheme();
   initPrint();
-  animateSkills();
-  yearStamp();
+  initNavScroll();
+  initReveals();
+  initSkills();
+  initSmoothAnchors();
 });
